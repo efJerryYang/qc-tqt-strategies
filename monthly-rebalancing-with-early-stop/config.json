@@ -1,0 +1,18 @@
+{
+    "algorithm-language": "Python",
+    "parameters": {
+        "p_lookback": "252",
+        "p_num_coarse": "200",
+        "p_num_fine": "70",
+        "p_num_long": "5",
+        "p_adjustment_step": "1.0",
+        "p_n_portfolios": "1000",
+        "p_short_lookback": "63",
+        "p_rand_seed": "13"
+    },
+    "description": "",
+    "cloud-id": 19188346,
+    "organization-id": "f6897bf981f8eeb7454289c6f10575df",
+    "python-venv": 1,
+    "encrypted": false
+}

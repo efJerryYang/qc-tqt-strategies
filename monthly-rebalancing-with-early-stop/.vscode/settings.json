@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/home/jerry/.pyenv/versions/3.8.13/envs/qc_lean/bin/python",
+    "python.languageServer": "Pylance"
+}
