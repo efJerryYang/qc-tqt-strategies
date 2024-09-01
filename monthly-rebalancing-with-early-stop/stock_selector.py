@@ -5,7 +5,7 @@ class StockSelector:
         self.algorithm = algorithm
         self.config = algorithm.config
         self._momp = {}
-        self._lookback = self.config.lookback
+        self._lookback = self.config.momentum_lookback
         self._num_coarse = self.config.num_coarse
         self._num_fine = self.config.num_fine
         self._num_long = self.config.num_long
@@ -18,7 +18,7 @@ class StockSelector:
 
         if not self.algorithm.first_trade_date:
             self.algorithm.first_trade_date = self.algorithm.time
-            self.algorithm.next_adjustment_date = self.algorithm.get_next_adjustment_date(self.algorithm.time)
+            self.algorithm.next_adjustment_date = self.algorithm.event_handler.get_next_adjustment_date(self.algorithm.time)
             self.algorithm._rebalance = True
 
         selected = sorted([x for x in coarse if x.has_fundamental_data and x.price > 5],
@@ -34,7 +34,7 @@ class StockSelector:
         for security in changes.removed_securities:
             symbol = security.symbol
             if self._momp.pop(symbol, None) is not None:
-                self.algorithm.Liquidate(symbol, 'Removed from universe')
+                self.algorithm.liquidate(symbol, 'Removed from universe')
 
         for security in changes.added_securities:
             if security.symbol not in self._momp:

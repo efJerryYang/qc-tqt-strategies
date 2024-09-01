@@ -10,35 +10,29 @@ class PortfolioOptimizer:
         short_lookback = self.config.short_lookback
         returns = self.algorithm.history(selected_symbols, short_lookback, Resolution.DAILY)['close'].unstack(level=0).pct_change().dropna()
         n_assets = len(selected_symbols)
-        n_portfolios = self.config.n_portfolios
+        n = self.config.simulation_count
 
-        results = np.zeros((3, n_portfolios))
-        weights_record = []
+        weights = np.random.random((n, n_assets))
+        weights /= weights.sum(axis=1)[:, np.newaxis]
 
-        for i in range(n_portfolios):
-            weights = np.random.random(n_assets)
-            weights /= np.sum(weights)
+        mean_returns = returns.mean().values
+        # cov_matrix = returns.cov().values * short_lookback
 
-            portfolio_return = np.sum(returns.mean() * weights) * short_lookback
-            portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(returns.cov() * short_lookback, weights)))
+        portfolio_returns = np.dot(weights, mean_returns) * short_lookback
+        # portfolio_stddevs = np.sqrt(np.einsum('ij,jk,ik->i', weights, cov_matrix, weights))
 
-            downside_stddev = np.sqrt(np.mean(np.minimum(0, returns).apply(lambda x: x**2, axis=0).dot(weights)))
-            sortino_ratio = portfolio_return / downside_stddev
+        downside_returns = np.minimum(0, returns.values)
+        downside_stddevs = np.sqrt(np.mean(np.square(downside_returns).dot(weights.T), axis=0))
+        sortino_ratios = portfolio_returns / downside_stddevs
 
-            results[0,i] = portfolio_return
-            results[1,i] = portfolio_stddev
-            results[2,i] = sortino_ratio
-
-            weights_record.append(weights)
-
-        best_sortino_idx = np.argmax(results[2])
-        return weights_record[best_sortino_idx]
+        best_idx = np.argmax(sortino_ratios)
+        return weights[best_idx]
 
     def adjust_portfolio(self, target_weights):
         current_date = self.algorithm.time.strftime('%Y-%m-%d %H:%M:%S')
         self.algorithm.debug(f"{current_date}: Adjusting portfolio")
         
-        current_symbols = set(self.algorithm.portfolio.keys)
+        current_symbols = set(self.algorithm.portfolio.keys())
         target_symbols = set(target_weights.keys())
 
         removed_symbols = current_symbols - target_symbols
@@ -55,7 +49,7 @@ class PortfolioOptimizer:
     def log_holdings(self):
         holdings = {}
         sum_of_all_holdings = 0
-        for symbol in self.algorithm.portfolio.keys:
+        for symbol in self.algorithm.portfolio.keys():
             holding_percentage = self.algorithm.portfolio[symbol].holdings_value / self.algorithm.portfolio.total_portfolio_value * 100
             if holding_percentage > 1e-4:
                 sum_of_all_holdings += holding_percentage

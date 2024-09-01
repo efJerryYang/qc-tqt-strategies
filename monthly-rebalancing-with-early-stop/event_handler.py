@@ -109,18 +109,19 @@ class EventHandler:
                 self.algorithm.stock_selector._short_lookback = self.config.short_lookback
                 self.halved_lookback = False
 
-    def get_next_adjustment_date(self, current_date, initial=False):
+    def get_next_adjustment_date(self, current_date):
         if self.config.adjustment_frequency == 'weekly':
-            return self.algorithm.trading_calendar.add_days(current_date, 7)
+            next_trade_day = current_date + timedelta(days=7)
+            potential_trade_days = self.algorithm.trading_calendar.get_days_by_type(TradingDayType.BUSINESS_DAY, next_trade_day, next_trade_day + timedelta(days=7))
+            return next(iter(potential_trade_days))
         elif self.config.adjustment_frequency == 'bi-weekly':
-            return self.algorithm.trading_calendar.add_days(current_date, 14)
+            next_trade_day = current_date + timedelta(days=14)
+            potential_trade_days = self.algorithm.trading_calendar.get_days_by_type(TradingDayType.BUSINESS_DAY, next_trade_day, next_trade_day + timedelta(days=14))
+            return next(iter(potential_trade_days))
         elif self.config.adjustment_frequency == 'monthly':
-            if initial:
-                next_month = current_date.replace(day=1) + timedelta(days=32)
-                next_month = next_month.replace(day=1)
-            else:
-                next_month = current_date.replace(day=1) + timedelta(days=32)
-                next_month = next_month.replace(day=1)
-            return self.algorithm.trading_calendar.add_days(next_month, 0)  # This ensures we get the next trading day
+            next_month = current_date.replace(day=1) + timedelta(days=32)
+            next_trade_day = next_month.replace(day=1)
+            potential_trade_days = self.algorithm.trading_calendar.get_days_by_type(TradingDayType.BUSINESS_DAY, next_trade_day, next_trade_day + timedelta(days=32))
+            return next(iter(potential_trade_days))
         else:
             raise ValueError(f"Unsupported adjustment frequency: {self.config.adjustment_frequency}")

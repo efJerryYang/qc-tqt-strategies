@@ -22,12 +22,6 @@ class MonthlyRebalancingWithEarlyStop(QCAlgorithm):
             self.brokerage_model, FuncSecuritySeeder(self.get_last_known_prices)
         ))
 
-        self.universe_settings.resolution = Resolution.DAILY
-
-        self.stock_selector = StockSelector(self)
-        self.portfolio_optimizer = PortfolioOptimizer(self)
-        self.event_handler = EventHandler(self)
-
         self.current_holdings = set()
         self.target_weights = {}
         self.first_trade_date = None
@@ -35,6 +29,11 @@ class MonthlyRebalancingWithEarlyStop(QCAlgorithm):
 
         np.random.seed(self.config.rand_seed)
         random.seed(self.config.rand_seed)
+        self.universe_settings.resolution = Resolution.DAILY
+
+        self.stock_selector = StockSelector(self)
+        self.portfolio_optimizer = PortfolioOptimizer(self)
+        self.event_handler = EventHandler(self)
 
         self.add_universe(self.stock_selector.coarse_selection, self.stock_selector.fine_selection)
 
